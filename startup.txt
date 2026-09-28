@@ -1,0 +1,6 @@
+cd docs
+ls
+ls fold
+conf-dump
+exit
+abcd
