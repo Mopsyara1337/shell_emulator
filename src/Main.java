@@ -37,7 +37,7 @@ public class Main {
 
             case "exit":
                 System.out.println("Выход из эмулятора.");
-                return true;
+                return false;
 
             default:
                 System.out.println("Неизвестная команда: " + command);
