@@ -1,4 +1,4 @@
-# shell_emulator
+# Shell Emulator
 
 Эмулятор командной оболочки ОС.
 
@@ -16,29 +16,79 @@
 - обработка неизвестных команд;
 - игнорирование пустого ввода.
 
+## Этап 2. Конфигурация
+
+Реализовано:
+- передача пути к VFS через аргументы командной строки;
+- передача пути к стартовому скрипту;
+- выполнение команд стартового скрипта;
+- пропуск неизвестных команд при выполнении стартового скрипта;
+- команда `conf-dump`;
+- переход в интерактивный REPL после выполнения скрипта;
+- тестовые `.bat`-скрипты для проверки параметров запуска.
+
 ## Запуск
 
-Для компиляции и запуска программы в Windows используется файл `run.bat`.
-
-Запуск:
+Первый аргумент — путь к VFS, второй аргумент — путь к стартовому скрипту.
 
 ```bat
-run.bat
+run.bat vfs.xml startup.txt
+```
+
+## Тестовые скрипты
+
+Для проверки параметров командной строки используются `.bat`-скрипты из папки `scripts`:
+
+- `test_valid.bat` — запуск с корректными путями к VFS и стартовому скрипту;
+- `test_invalid_args.bat` — проверка запуска с неверным количеством аргументов;
+- `test_missing_script.bat` — проверка запуска с несуществующим стартовым скриптом.
+
+Запуск тестового скрипта:
+
+```bat
+scripts\test_valid.bat
 ```
 
 ## Пример использования
+
+Запуск программы:
+
+```bat
+run.bat vfs.xml startup.txt
+```
+
+Выполнение команд из стартового скрипта:
+
+```text
+VFS path: vfs.xml
+Startup path: startup.txt
+
+my_vfs> cd docs
+Команда: cd
+Аргументы: docs
+
+my_vfs> ls
+Команда: ls
+Аргументы: отсутствуют
+
+my_vfs> conf-dump
+vfs-path: vfs.xml
+startup-script: startup.txt
+```
+
+После выполнения стартового скрипта программа переходит в интерактивный режим:
 
 ```text
 my_vfs> ls test
 Команда: ls
 Аргументы: test
 
-my_vfs> cd docs
-Команда: cd
-Аргументы: docs
-
 my_vfs> unknown
 Неизвестная команда: unknown
+
+my_vfs> conf-dump
+vfs-path: vfs.xml
+startup-script: startup.txt
 
 my_vfs> exit
 Выход из эмулятора.
@@ -48,10 +98,20 @@ my_vfs> exit
 
 ```text
 shell_emulator/
+├── scripts/
+│   ├── test_valid.bat
+│   ├── test_invalid_args.bat
+│   └── test_missing_script.bat
 ├── src/
 │   └── Main.java
 ├── tests/
+│   └── .gitkeep
+├── startup.txt
+├── vfs.xml
 ├── .gitignore
 ├── README.md
 └── run.bat
 ```
+
+
+
