@@ -27,6 +27,21 @@
 - переход в интерактивный REPL после выполнения скрипта;
 - тестовые `.bat`-скрипты для проверки параметров запуска.
 
+## Этап 3. VFS
+
+Реализовано:
+- загрузка виртуальной файловой системы из XML-файла;
+- представление VFS в виде дерева объектов `VfsNode`;
+- хранение файлов и директорий только в оперативной памяти;
+- поддержка вложенных директорий;
+- хранение содержимого файлов;
+- команда `vfs-info`;
+- вычисление SHA-256 исходных данных VFS;
+- тестирование нескольких вариантов VFS:
+    - минимальная VFS;
+    - VFS с несколькими файлами;
+    - VFS с вложенностью не менее 3 уровней.
+
 ## Запуск
 
 Первый аргумент — путь к VFS, второй аргумент — путь к стартовому скрипту.
@@ -42,6 +57,12 @@ run.bat vfs.xml startup.txt
 - `test_valid.bat` — запуск с корректными путями к VFS и стартовому скрипту;
 - `test_invalid_args.bat` — проверка запуска с неверным количеством аргументов;
 - `test_missing_script.bat` — проверка запуска с несуществующим стартовым скриптом.
+
+Для проверки работы VFS используются дополнительные `.bat`-скрипты:
+
+- `test_vfs_minimal.bat` — запуск с минимальной VFS;
+- `test_vfs_files.bat` — запуск с VFS, содержащей несколько файлов и директорий;
+- `test_vfs_nested.bat` — запуск с VFS с вложенностью не менее 3 уровней.
 
 Запуск тестового скрипта:
 
@@ -74,6 +95,10 @@ my_vfs> ls
 my_vfs> conf-dump
 vfs-path: vfs.xml
 startup-script: startup.txt
+
+my_vfs> vfs-info
+name: my_vfs
+sha256: aec6da3e1cf6f3da2883730fdf1e7bcefb253ab85d34900367e933b27aee2510
 ```
 
 После выполнения стартового скрипта программа переходит в интерактивный режим:
@@ -90,6 +115,10 @@ my_vfs> conf-dump
 vfs-path: vfs.xml
 startup-script: startup.txt
 
+my_vfs> vfs-info
+name: my_vfs
+sha256: aec6da3e1cf6f3da2883730fdf1e7bcefb253ab85d34900367e933b27aee2510
+
 my_vfs> exit
 Выход из эмулятора.
 ```
@@ -99,19 +128,28 @@ my_vfs> exit
 ```text
 shell_emulator/
 ├── scripts/
-│   ├── test_valid.bat
 │   ├── test_invalid_args.bat
-│   └── test_missing_script.bat
+│   ├── test_missing_script.bat
+│   ├── test_valid.bat
+│   ├── test_vfs_files.bat
+│   ├── test_vfs_minimal.bat
+│   └── test_vfs_nested.bat
 ├── src/
-│   └── Main.java
+│   ├── Main.java
+│   └── VfsNode.java
 ├── tests/
 │   └── .gitkeep
-├── startup.txt
-├── vfs.xml
+├── vfs/
+│   ├── minimal.xml
+│   ├── multiple_files.xml
+│   └── nested.xml
 ├── .gitignore
 ├── README.md
-└── run.bat
+├── run.bat
+├── startup.txt
+└── vfs.xml
 ```
+
 
 
 
