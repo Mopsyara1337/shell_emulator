@@ -1,0 +1,9 @@
+<vfs name="nested_vfs">
+    <directory name="home">
+        <directory name="user">
+            <directory name="projects">
+                <file name="test.txt">Hello</file>
+            </directory>
+        </directory>
+    </directory>
+</vfs>

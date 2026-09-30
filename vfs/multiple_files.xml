@@ -1,0 +1,7 @@
+<vfs name="files_vfs">
+    <file name="a.txt">AAA</file>
+    <file name="b.txt">BBB</file>
+    <directory name="docs">
+        <file name="c.txt">CCC</file>
+    </directory>
+</vfs>
