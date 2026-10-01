@@ -1,7 +1,31 @@
-cd docs
-ls
-ls fold
 conf-dump
 vfs-info
-exit
-abcd
+
+ls
+ls docs
+ls home/user
+
+cd docs
+ls
+head notes.txt
+tac notes.txt
+
+cd /
+cd home/user
+ls
+head hello.txt
+tac hello.txt
+
+head 1 hello.txt
+head 5 hello.txt
+
+cd /
+cd root.txt
+ls root.txt
+head docs
+tac docs
+
+head abc root.txt
+head -1 root.txt
+
+unknown

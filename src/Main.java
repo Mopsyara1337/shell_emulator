@@ -1,8 +1,8 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -16,10 +16,10 @@ import java.security.NoSuchAlgorithmException;
 import java.nio.charset.StandardCharsets;
 
 public class Main {
-    private static final String VFS_NAME = "my_vfs";
     private static Path vfsPath;
     private static Path startupPath;
     private static VfsNode vfsRoot;
+    private static VfsNode currentDirectory;
     private static String rootName;
     private static String vfsHash;
 
@@ -45,6 +45,7 @@ public class Main {
         if (vfsRoot == null) {
             return;
         }
+        currentDirectory = vfsRoot;
 
         String vfsData;
         try {
@@ -74,7 +75,7 @@ public class Main {
                 continue;
             }
 
-            System.out.println(VFS_NAME + "> " + input);
+            System.out.println(getCurrentPath() + "> " + input);
 
             String[] parts = input.split("\\s+");
 
@@ -87,7 +88,7 @@ public class Main {
         //Чтение команд из консоли
         Scanner scanner = new Scanner(System.in);
         while(true){
-            System.out.print(VFS_NAME + "> ");
+            System.out.print(getCurrentPath() + "> ");
 
             String input = scanner.nextLine().trim();
             if(input.isEmpty()){
@@ -109,11 +110,19 @@ public class Main {
 
         switch (command){
             case "ls":
-                printStubCommand("ls", parts);
+                ls(parts);
                 return true;
 
             case "cd":
-                printStubCommand("cd", parts);
+                cd(parts);
+                return true;
+
+            case "head":
+                head(parts);
+                return true;
+
+            case "tac":
+                tac(parts);
                 return true;
 
             case "exit":
@@ -188,7 +197,6 @@ public class Main {
             for (int i = 0; i < children.getLength(); i++){
                 Node child = children.item(i);
 
-                //СПРОСИТЬ ЧТО ЭТО ДЕЛАЕТ
                 if(child.getNodeType() == Node.ELEMENT_NODE){
                     Element childElement = (Element) child;
 
@@ -233,5 +241,209 @@ public class Main {
             System.out.println("Алгоритм SHA-256 недоступен");
         }
         return null;
+    }
+
+    private static void ls(String[] parts){
+        VfsNode current;
+        if(parts.length == 1){
+            current = currentDirectory;
+        }
+        else if(parts.length == 2){
+            current = resolvePath(parts[1]);
+            if (current == null) {
+                System.out.println("Ошибка: директория " + parts[1] + " не найдена");
+                return;
+            }
+
+            if (!current.isDirectory()) {
+                System.out.println("Ошибка: " + parts[1] + " не является директорией");
+                return;
+            }
+        }
+        else{
+            System.out.println("Ошибка: неверное число параметров");
+            return;
+        }
+
+        for (VfsNode node : current.getChildren()) {
+            if(node.isDirectory()){
+                System.out.println(node.getName() + '/');
+            }
+            else{
+                System.out.println(node.getName());
+            }
+        }
+    }
+
+    private static void cd(String[] parts){
+        if(parts.length != 2){
+            System.out.println("Ошибка: cd принимает 1 аргумент");
+            return;
+        }
+
+        VfsNode target = resolvePath(parts[1]);
+
+        if(target == null){
+            System.out.println("Ошибка: директория " + parts[1] + " не найдена");
+            return;
+        }
+
+        if(!target.isDirectory()){
+            System.out.println("Ошибка: " + parts[1] + " не является директорией");
+            return;
+        }
+
+        currentDirectory = target;
+    }
+
+    private static void head(String[] parts) {
+        String target;
+        int linesCount = 10;
+        if(parts.length == 2){
+            target = parts[1];
+        }
+        else if(parts.length == 3){
+            try{
+                linesCount = Integer.parseInt(parts[1]);
+            }catch (NumberFormatException e){
+                System.out.println("Ошибка: количество строк должно быть целым числом");
+                return;
+            }
+
+            if (linesCount < 0) {
+                System.out.println("Ошибка: количество строк не может быть отрицательным");
+                return;
+            }
+
+            target = parts[2];
+        }
+        else {
+            System.out.println("Ошибка: неверное число параметров");
+            return;
+        }
+
+        VfsNode file = resolvePath(target);
+
+        if (file == null) {
+            System.out.println("Ошибка файл " + target + " не найден");
+            return;
+        }
+
+        if(file.isDirectory()){
+            System.out.println("Ошибка: " + target + " не является файлом");
+            return;
+        }
+
+        if(file.getContent().isEmpty()){
+            return;
+        }
+
+        String[] lines = file.getContent().split("\\R");
+        int n = Math.min(linesCount, lines.length);
+
+        for (int i = 0; i < n; i++) {
+            System.out.println(lines[i]);
+        }
+    }
+
+    private static void tac(String[] parts){
+        if(parts.length != 2){
+            System.out.println("Ошибка: tac принимает один параметр");
+            return;
+        }
+
+        String target = parts[1];
+        VfsNode file = resolvePath(target);
+
+        if (file == null) {
+            System.out.println("Ошибка файл " + target + " не найден");
+            return;
+        }
+
+        if(file.isDirectory()){
+            System.out.println("Ошибка: " + target + " не является файлом");
+            return;
+        }
+
+        if (file.getContent().isEmpty()){
+            return;
+        }
+
+        String[] lines = file.getContent().split("\\R");
+
+        for(int i = lines.length - 1; i >= 0; i--){
+            System.out.println(lines[i]);
+        }
+    }
+
+    private static VfsNode findChild(String target, VfsNode current){
+        for(VfsNode node : current.getChildren()){
+            if(node.getName().equals(target)){
+                return node;
+            }
+        }
+        return null;
+    }
+
+    private static String getCurrentPath(){
+        Deque<String> stack = new ArrayDeque<>();
+        VfsNode currentNode = currentDirectory;
+
+        while(currentNode != null){
+            stack.push(currentNode.getName());
+            currentNode = currentNode.getParent();
+        }
+
+        StringBuilder path = new StringBuilder();
+        while(!stack.isEmpty()){
+            path.append(stack.pop());
+
+            if(!stack.isEmpty()){
+                path.append("/");
+            }
+        }
+
+        return path.toString();
+    }
+
+    private static VfsNode resolvePath(String path) {
+        if (path.isEmpty()) {
+            return currentDirectory;
+        }
+
+        VfsNode current;
+
+        if (path.startsWith("/")) {
+            current = vfsRoot;
+        } else {
+            current = currentDirectory;
+        }
+
+        String[] pathParts = path.split("/");
+
+        for (String part : pathParts) {
+            if (part.isEmpty() || part.equals(".")) {
+                continue;
+            }
+
+            if (part.equals("..")) {
+                if (current.getParent() != null) {
+                    current = current.getParent();
+                }
+                continue;
+            }
+
+            if (!current.isDirectory()) {
+                return null;
+            }
+
+            current = findChild(part, current);
+
+            if (current == null) {
+                return null;
+            }
+        }
+
+        return current;
     }
 }
