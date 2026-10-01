@@ -42,6 +42,20 @@
     - VFS с несколькими файлами;
     - VFS с вложенностью не менее 3 уровней.
 
+## Этап 4. Основные команды
+
+Реализовано:
+- команда `ls` для вывода содержимого текущей директории;
+- поддержка пути в качестве аргумента команды `ls`;
+- команда `cd` для смены текущей директории;
+- поддержка относительных и абсолютных путей;
+- поддержка `.` и `..` при работе с путями;
+- отображение текущего пути в приглашении командной строки;
+- команда `head` для вывода первых строк файла;
+- возможность указать количество строк для команды `head`;
+- команда `tac` для вывода содержимого файла в обратном порядке строк;
+- обработка ошибок при работе с файлами, директориями и некорректными путями.
+
 ## Запуск
 
 Первый аргумент — путь к VFS, второй аргумент — путь к стартовому скрипту.
@@ -78,38 +92,36 @@ scripts\test_valid.bat
 run.bat vfs.xml startup.txt
 ```
 
-Выполнение команд из стартового скрипта:
+Пример работы:
 
 ```text
-VFS path: vfs.xml
-Startup path: startup.txt
+my_vfs> ls
+root.txt
+docs/
+home/
 
 my_vfs> cd docs
-Команда: cd
-Аргументы: docs
 
-my_vfs> ls
-Команда: ls
-Аргументы: отсутствуют
+my_vfs/docs> ls
+notes.txt
 
-my_vfs> conf-dump
-vfs-path: vfs.xml
-startup-script: startup.txt
+my_vfs/docs> head 3 notes.txt
+First note
+Second note
+Third note
 
-my_vfs> vfs-info
-name: my_vfs
-sha256: aec6da3e1cf6f3da2883730fdf1e7bcefb253ab85d34900367e933b27aee2510
-```
+my_vfs/docs> tac notes.txt
+Sixth note
+Fifth note
+Fourth note
+Third note
+Second note
+First note
 
-После выполнения стартового скрипта программа переходит в интерактивный режим:
+my_vfs/docs> cd ..
 
-```text
-my_vfs> ls test
-Команда: ls
-Аргументы: test
-
-my_vfs> unknown
-Неизвестная команда: unknown
+my_vfs> ls home/user
+hello.txt
 
 my_vfs> conf-dump
 vfs-path: vfs.xml
@@ -117,11 +129,31 @@ startup-script: startup.txt
 
 my_vfs> vfs-info
 name: my_vfs
-sha256: aec6da3e1cf6f3da2883730fdf1e7bcefb253ab85d34900367e933b27aee2510
+sha256: <SHA-256 загруженной VFS>
 
 my_vfs> exit
 Выход из эмулятора.
 ```
+
+## Работа с путями
+
+Команды `ls`, `cd`, `head` и `tac` поддерживают относительные и абсолютные пути.
+
+Примеры:
+
+```text
+ls docs
+ls /home/user
+cd ../home
+cd /home/user
+head docs/notes.txt
+tac /docs/notes.txt
+```
+
+Специальные элементы пути:
+- `.` — текущая директория;
+- `..` — родительская директория;
+- `/` — корень VFS.
 
 ## Структура проекта
 

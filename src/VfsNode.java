@@ -6,6 +6,7 @@ public class VfsNode {
     private boolean isDirectory;
     private String content;
     private List<VfsNode> children;
+    private VfsNode parent;
 
     public VfsNode(String name, String content){
         this.name = name;
@@ -20,6 +21,7 @@ public class VfsNode {
     }
 
     public void addChild(VfsNode child){
+        child.parent = this;
         children.add(child);
     }
 
@@ -33,5 +35,13 @@ public class VfsNode {
 
     public List<VfsNode> getChildren() {
         return children;
+    }
+
+    public VfsNode getParent(){
+        return parent;
+    }
+
+    public String getContent(){
+        return content;
     }
 }
