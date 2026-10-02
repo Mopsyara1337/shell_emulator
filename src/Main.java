@@ -125,6 +125,14 @@ public class Main {
                 tac(parts);
                 return true;
 
+            case "mkdir":
+                mkdir(parts);
+                return true;
+
+            case "touch":
+                touch(parts);
+                return true;
+
             case "exit":
                 System.out.println("Выход из эмулятора.");
                 return false;
@@ -143,22 +151,6 @@ public class Main {
                 System.out.println("Неизвестная команда: " + command);
                 return true;
         }
-    }
-
-    private static void printStubCommand(String command, String[] parts){
-        System.out.println("Команда: " + command);
-
-        System.out.print("Аргументы:");
-        if(parts.length == 1){
-            System.out.println(" отсутствуют");
-            return;
-        }
-
-        for(int i = 1; i < parts.length; i++){
-            System.out.print(" " + parts[i]);
-        }
-
-        System.out.println();
     }
 
     private static VfsNode loadVfs(){
@@ -445,5 +437,110 @@ public class Main {
         }
 
         return current;
+    }
+
+    private static void mkdir(String[] parts){
+        if(parts.length != 2){
+            System.out.println("Ошибка: mkdir принимает 1 параметр");
+            return;
+        }
+
+        String path = parts[1];
+        int lastSlash = path.lastIndexOf('/');
+
+        String name;
+        VfsNode parentDirectory;
+
+        if(lastSlash == -1){
+            name = path;
+            parentDirectory = currentDirectory;
+        }
+        else{
+            name = path.substring(lastSlash + 1);
+            String parentPath = path.substring(0, lastSlash);
+
+            if(parentPath.isEmpty()){
+                parentPath = "/";
+            }
+
+            parentDirectory = resolvePath(parentPath);
+
+            if(parentDirectory == null){
+                System.out.println("Ошибка: родительская директория не найдена");
+                return;
+            }
+
+            if(!parentDirectory.isDirectory()){
+                System.out.println("Ошибка: родительский объект не является директорией");
+                return;
+            }
+        }
+
+        if(name.isEmpty()){
+            System.out.println("Ошибка: неверное имя директории");
+            return;
+        }
+
+        if(findChild(name, parentDirectory) != null){
+            System.out.println("Ошибка: объект " + path + " уже существует");
+            return;
+        }
+
+        VfsNode newDirectory = new VfsNode(name);
+        parentDirectory.addChild(newDirectory);
+    }
+
+    private static void touch(String[] parts){
+        if(parts.length != 2){
+            System.out.println("Ошибка: touch принимает 1 параметр");
+            return;
+        }
+
+        String path = parts[1];
+        int lastSlash = path.lastIndexOf('/');
+
+        String name;
+        VfsNode parentDirectory;
+
+        if(lastSlash == -1){
+            name = path;
+            parentDirectory = currentDirectory;
+        }
+        else{
+            name = path.substring(lastSlash + 1);
+            String parentPath = path.substring(0, lastSlash);
+
+            if(parentPath.isEmpty()){
+                parentPath = "/";
+            }
+
+            parentDirectory = resolvePath(parentPath);
+
+            if(parentDirectory == null){
+                System.out.println("Ошибка: родительская директория не найдена");
+                return;
+            }
+
+            if(!parentDirectory.isDirectory()){
+                System.out.println("Ошибка: родительский объект не является директорией");
+                return;
+            }
+        }
+        if(name.isEmpty()){
+            System.out.println("Ошибка: неверное имя файла");
+            return;
+        }
+
+        VfsNode existing = findChild(name, parentDirectory);
+
+        if (existing != null) {
+            if (existing.isDirectory()) {
+                System.out.println("Ошибка: " + path + " является директорией");
+            }
+            return;
+        }
+
+        VfsNode newFile = new VfsNode(name, "");
+        parentDirectory.addChild(newFile);
     }
 }
