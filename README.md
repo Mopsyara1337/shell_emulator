@@ -56,6 +56,17 @@
 - команда `tac` для вывода содержимого файла в обратном порядке строк;
 - обработка ошибок при работе с файлами, директориями и некорректными путями.
 
+## Этап 5. Дополнительные команды
+
+Реализовано:
+- команда `mkdir` для создания новых директорий в VFS;
+- команда `touch` для создания новых пустых файлов в VFS;
+- поддержка относительных и абсолютных путей в командах `mkdir` и `touch`;
+- проверка существования родительской директории;
+- проверка конфликтов имён файлов и директорий;
+- обработка ошибок при создании объектов;
+- все изменения виртуальной файловой системы выполняются только в оперативной памяти.
+
 ## Запуск
 
 Первый аргумент — путь к VFS, второй аргумент — путь к стартовому скрипту.
@@ -123,6 +134,31 @@ my_vfs/docs> cd ..
 my_vfs> ls home/user
 hello.txt
 
+my_vfs> mkdir testdir
+
+my_vfs> ls
+root.txt
+docs/
+home/
+testdir/
+
+my_vfs> touch test.txt
+
+my_vfs> ls
+root.txt
+docs/
+home/
+testdir/
+test.txt
+
+my_vfs> mkdir docs/newdir
+my_vfs> touch docs/new.txt
+
+my_vfs> ls docs
+notes.txt
+newdir/
+new.txt
+
 my_vfs> conf-dump
 vfs-path: vfs.xml
 startup-script: startup.txt
@@ -137,7 +173,7 @@ my_vfs> exit
 
 ## Работа с путями
 
-Команды `ls`, `cd`, `head` и `tac` поддерживают относительные и абсолютные пути.
+Команды `ls`, `cd`, `head`, `tac`, `mkdir` и `touch` поддерживают относительные и абсолютные пути.
 
 Примеры:
 
@@ -148,6 +184,10 @@ cd ../home
 cd /home/user
 head docs/notes.txt
 tac /docs/notes.txt
+mkdir docs/newdir
+mkdir /home/user/test
+touch docs/new.txt
+touch /home/user/file.txt
 ```
 
 Специальные элементы пути:

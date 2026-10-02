@@ -29,3 +29,25 @@ head abc root.txt
 head -1 root.txt
 
 unknown
+
+cd /
+
+mkdir testdir
+ls
+
+mkdir testdir
+mkdir docs/newdir
+ls docs
+
+mkdir nonexistent/newdir
+mkdir root.txt/newdir
+
+touch test.txt
+ls
+
+touch test.txt
+touch docs/new.txt
+ls docs
+
+touch nonexistent/new.txt
+touch docs
