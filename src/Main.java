@@ -22,6 +22,7 @@ public class Main {
     private static VfsNode currentDirectory;
     private static String rootName;
     private static String vfsHash;
+    private static final int NUM_OF_ARGUMENTS = 2;
 
     public static void main(String[] args) {
         if (!initialize(args)) {
@@ -41,7 +42,7 @@ public class Main {
     }
 
     private static boolean initialize(String[] args) {
-        if (args.length != 2) {
+        if (args.length != NUM_OF_ARGUMENTS) {
             System.out.println("Неверное число аргументов");
             return false;
         }
@@ -256,10 +257,11 @@ public class Main {
 
     private static void ls(String[] parts){
         VfsNode current;
-        if(parts.length == 1){
+        int min_args_amount = 1;
+        if(parts.length == min_args_amount){
             current = currentDirectory;
         }
-        else if(parts.length == 2){
+        else if(parts.length == NUM_OF_ARGUMENTS){
             current = resolvePath(parts[1]);
             if (current == null) {
                 System.out.println("Ошибка: директория " + parts[1] + " не найдена");
@@ -287,7 +289,7 @@ public class Main {
     }
 
     private static void cd(String[] parts){
-        if(parts.length != 2){
+        if(parts.length != NUM_OF_ARGUMENTS){
             System.out.println("Ошибка: cd принимает 1 аргумент");
             return;
         }
@@ -310,10 +312,11 @@ public class Main {
     private static void head(String[] parts) {
         String target;
         int linesCount = 10;
-        if(parts.length == 2){
+        int max_args_amount = 3;
+        if(parts.length == NUM_OF_ARGUMENTS){
             target = parts[1];
         }
-        else if(parts.length == 3){
+        else if(parts.length == max_args_amount){
             try{
                 linesCount = Integer.parseInt(parts[1]);
             }catch (NumberFormatException e){
@@ -348,7 +351,7 @@ public class Main {
     }
 
     private static void tac(String[] parts){
-        if(parts.length != 2){
+        if(parts.length != NUM_OF_ARGUMENTS){
             System.out.println("Ошибка: tac принимает один параметр");
             return;
         }
@@ -447,7 +450,7 @@ public class Main {
     }
 
     private static void mkdir(String[] parts) {
-        if (parts.length != 2) {
+        if (parts.length != NUM_OF_ARGUMENTS) {
             System.out.println("Ошибка: mkdir принимает 1 параметр");
             return;
         }
@@ -478,7 +481,7 @@ public class Main {
     }
 
     private static void touch(String[] parts) {
-        if (parts.length != 2) {
+        if (parts.length != NUM_OF_ARGUMENTS) {
             System.out.println("Ошибка: touch принимает 1 параметр");
             return;
         }
