@@ -24,9 +24,26 @@ public class Main {
     private static String vfsHash;
 
     public static void main(String[] args) {
-        if(args.length != 2){
-            System.out.println("Неверное число аргументов");
+        if (!initialize(args)) {
             return;
+        }
+
+        List<String> commands = loadStartupScript();
+        if (commands == null) {
+            return;
+        }
+
+        if (!executeStartupScript(commands)) {
+            return;
+        }
+
+        runRepl();
+    }
+
+    private static boolean initialize(String[] args) {
+        if (args.length != 2) {
+            System.out.println("Неверное число аргументов");
+            return false;
         }
 
         vfsPath = Path.of(args[0]);
@@ -36,42 +53,46 @@ public class Main {
         System.out.println("Startup path: " + startupPath);
         System.out.println();
 
-        if(!Files.exists(vfsPath)){
+        if (!Files.exists(vfsPath)) {
             System.out.println("VFS не найдена");
-            return;
+            return false;
         }
 
         vfsRoot = loadVfs();
         if (vfsRoot == null) {
-            return;
+            return false;
         }
+
         currentDirectory = vfsRoot;
 
-        String vfsData;
         try {
-            vfsData = Files.readString(vfsPath);
+            String vfsData = Files.readString(vfsPath);
             vfsHash = calculateSha256(vfsData);
-        }catch(IOException e){
+        } catch (IOException e) {
             System.out.println("Ошибка чтения VFS");
-            return;
+            return false;
         }
 
-        if(!Files.exists(startupPath)){
+        return true;
+    }
+
+    private static List<String> loadStartupScript() {
+        if (!Files.exists(startupPath)) {
             System.out.println("Стартовый скрипт не найден");
-            return;
+            return null;
         }
 
-        List<String> commands;
         try {
-            commands = Files.readAllLines(startupPath);
-        }catch (IOException e){
+            return Files.readAllLines(startupPath);
+        } catch (IOException e) {
             System.out.println("Ошибка чтения стартового скрипта");
-            return;
+            return null;
         }
+    }
 
-        //Чтение команд из стартового скрипта
-        for(String input : commands){
-            if(input.isEmpty()){
+    private static boolean executeStartupScript(List<String> commands) {
+        for (String input : commands) {
+            if (input.isEmpty()) {
                 continue;
             }
 
@@ -79,74 +100,72 @@ public class Main {
 
             String[] parts = input.split("\\s+");
 
-            if(!executeCommand(parts)){
-                return;
+            if (!executeCommand(parts)) {
+                return false;
             }
+
             System.out.println();
         }
 
-        //Чтение команд из консоли
+        return true;
+    }
+
+    private static void runRepl() {
         Scanner scanner = new Scanner(System.in);
-        while(true){
+
+        while (true) {
             System.out.print(getCurrentPath() + "> ");
 
             String input = scanner.nextLine().trim();
-            if(input.isEmpty()){
+
+            if (input.isEmpty()) {
                 continue;
             }
 
             String[] parts = input.split("\\s+");
 
-            if(!executeCommand(parts)){
+            if (!executeCommand(parts)) {
                 break;
             }
+
             System.out.println();
         }
+
         scanner.close();
     }
 
     private static boolean executeCommand(String[] parts){
         String command = parts[0];
-
         switch (command){
             case "ls":
                 ls(parts);
                 return true;
-
             case "cd":
                 cd(parts);
                 return true;
-
             case "head":
                 head(parts);
                 return true;
-
             case "tac":
                 tac(parts);
                 return true;
-
             case "mkdir":
                 mkdir(parts);
                 return true;
-
             case "touch":
                 touch(parts);
                 return true;
-
             case "exit":
                 System.out.println("Выход из эмулятора.");
                 return false;
-
             case "conf-dump":
                 System.out.println("vfs-path: " + vfsPath);
                 System.out.println("startup-script: " + startupPath);
                 return true;
-
             case "vfs-info":
                 System.out.println("name: " + rootName);
                 System.out.println("sha256: " + vfsHash);
                 return true;
-
             default:
                 System.out.println("Неизвестная команда: " + command);
                 return true;
@@ -301,38 +320,28 @@ public class Main {
                 System.out.println("Ошибка: количество строк должно быть целым числом");
                 return;
             }
-
             if (linesCount < 0) {
                 System.out.println("Ошибка: количество строк не может быть отрицательным");
                 return;
             }
-
             target = parts[2];
         }
         else {
             System.out.println("Ошибка: неверное число параметров");
             return;
         }
-
         VfsNode file = resolvePath(target);
-
         if (file == null) {
             System.out.println("Ошибка файл " + target + " не найден");
             return;
         }
-
         if(file.isDirectory()){
             System.out.println("Ошибка: " + target + " не является файлом");
             return;
         }
-
-        if(file.getContent().isEmpty()){
-            return;
-        }
-
+        if(file.getContent().isEmpty()){return;}
         String[] lines = file.getContent().split("\\R");
         int n = Math.min(linesCount, lines.length);
-
         for (int i = 0; i < n; i++) {
             System.out.println(lines[i]);
         }
@@ -430,103 +439,63 @@ public class Main {
             }
 
             current = findChild(part, current);
-
             if (current == null) {
                 return null;
             }
         }
-
         return current;
     }
 
-    private static void mkdir(String[] parts){
-        if(parts.length != 2){
+    private static void mkdir(String[] parts) {
+        if (parts.length != 2) {
             System.out.println("Ошибка: mkdir принимает 1 параметр");
             return;
         }
 
         String path = parts[1];
+
         int lastSlash = path.lastIndexOf('/');
+        String name = lastSlash == -1
+                ? path
+                : path.substring(lastSlash + 1);
 
-        String name;
-        VfsNode parentDirectory;
-
-        if(lastSlash == -1){
-            name = path;
-            parentDirectory = currentDirectory;
-        }
-        else{
-            name = path.substring(lastSlash + 1);
-            String parentPath = path.substring(0, lastSlash);
-
-            if(parentPath.isEmpty()){
-                parentPath = "/";
-            }
-
-            parentDirectory = resolvePath(parentPath);
-
-            if(parentDirectory == null){
-                System.out.println("Ошибка: родительская директория не найдена");
-                return;
-            }
-
-            if(!parentDirectory.isDirectory()){
-                System.out.println("Ошибка: родительский объект не является директорией");
-                return;
-            }
+        VfsNode parentDirectory = resolveParentDirectory(path);
+        if (parentDirectory == null) {
+            return;
         }
 
-        if(name.isEmpty()){
+        if (name.isEmpty()) {
             System.out.println("Ошибка: неверное имя директории");
             return;
         }
 
-        if(findChild(name, parentDirectory) != null){
+        if (findChild(name, parentDirectory) != null) {
             System.out.println("Ошибка: объект " + path + " уже существует");
             return;
         }
 
-        VfsNode newDirectory = new VfsNode(name);
-        parentDirectory.addChild(newDirectory);
+        parentDirectory.addChild(new VfsNode(name));
     }
 
-    private static void touch(String[] parts){
-        if(parts.length != 2){
+    private static void touch(String[] parts) {
+        if (parts.length != 2) {
             System.out.println("Ошибка: touch принимает 1 параметр");
             return;
         }
 
         String path = parts[1];
+
         int lastSlash = path.lastIndexOf('/');
+        String name = lastSlash == -1
+                ? path
+                : path.substring(lastSlash + 1);
 
-        String name;
-        VfsNode parentDirectory;
-
-        if(lastSlash == -1){
-            name = path;
-            parentDirectory = currentDirectory;
+        VfsNode parentDirectory = resolveParentDirectory(path);
+        if (parentDirectory == null) {
+            return;
         }
-        else{
-            name = path.substring(lastSlash + 1);
-            String parentPath = path.substring(0, lastSlash);
 
-            if(parentPath.isEmpty()){
-                parentPath = "/";
-            }
-
-            parentDirectory = resolvePath(parentPath);
-
-            if(parentDirectory == null){
-                System.out.println("Ошибка: родительская директория не найдена");
-                return;
-            }
-
-            if(!parentDirectory.isDirectory()){
-                System.out.println("Ошибка: родительский объект не является директорией");
-                return;
-            }
-        }
-        if(name.isEmpty()){
+        if (name.isEmpty()) {
             System.out.println("Ошибка: неверное имя файла");
             return;
         }
@@ -540,7 +509,34 @@ public class Main {
             return;
         }
 
-        VfsNode newFile = new VfsNode(name, "");
-        parentDirectory.addChild(newFile);
+        parentDirectory.addChild(new VfsNode(name, ""));
+    }
+
+    private static VfsNode resolveParentDirectory(String path) {
+        int lastSlash = path.lastIndexOf('/');
+
+        if (lastSlash == -1) {
+            return currentDirectory;
+        }
+
+        String parentPath = path.substring(0, lastSlash);
+
+        if (parentPath.isEmpty()) {
+            parentPath = "/";
+        }
+
+        VfsNode parentDirectory = resolvePath(parentPath);
+
+        if (parentDirectory == null) {
+            System.out.println("Ошибка: родительская директория не найдена");
+            return null;
+        }
+
+        if (!parentDirectory.isDirectory()) {
+            System.out.println("Ошибка: родительский объект не является директорией");
+            return null;
+        }
+
+        return parentDirectory;
     }
 }
