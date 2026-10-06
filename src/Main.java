@@ -22,6 +22,7 @@ public class Main {
     private static VfsNode currentDirectory;
     private static String rootName;
     private static String vfsHash;
+
     private static final int NUM_OF_ARGUMENTS = 2;
 
     public static void main(String[] args) {
@@ -257,8 +258,8 @@ public class Main {
 
     private static void ls(String[] parts){
         VfsNode current;
-        int min_args_amount = 1;
-        if(parts.length == min_args_amount){
+        int minArgsAmount = 1;
+        if(parts.length == minArgsAmount){
             current = currentDirectory;
         }
         else if(parts.length == NUM_OF_ARGUMENTS){
@@ -312,11 +313,11 @@ public class Main {
     private static void head(String[] parts) {
         String target;
         int linesCount = 10;
-        int max_args_amount = 3;
+        int maxArgsAmount = 3;
         if(parts.length == NUM_OF_ARGUMENTS){
             target = parts[1];
         }
-        else if(parts.length == max_args_amount){
+        else if(parts.length == maxArgsAmount){
             try{
                 linesCount = Integer.parseInt(parts[1]);
             }catch (NumberFormatException e){
